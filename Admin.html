@@ -1,0 +1,109 @@
+import { useState } from "react";
+import { supabase } from "../lib/supabaseClient"; // تأكد من إعداد هذا الملف للاتصال بـ Supabase
+
+export default function AddProductForm() {
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    discount_price: "",
+    image_url: "",
+    category: "",
+    tags: "",
+    in_stock: true,
+    featured: false,
+    best_seller: false,
+    weight: "",
+    origin: "",
+    specifications: ""
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const productData = {
+      ...form,
+      price: parseFloat(form.price),
+      discount_price: form.discount_price ? parseFloat(form.discount_price) : null,
+      tags: form.tags.split(",").map(tag => tag.trim()),
+      specifications: form.specifications ? JSON.parse(form.specifications) : {}
+    };
+
+    const { data, error } = await supabase.from("products").insert([productData]);
+
+    if (error) {
+      alert("خطأ في الإضافة: " + error.message);
+    } else {
+      alert("تمت إضافة المنتج بنجاح!");
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        discount_price: "",
+        image_url: "",
+        category: "",
+        tags: "",
+        in_stock: true,
+        featured: false,
+        best_seller: false,
+        weight: "",
+        origin: "",
+        specifications: ""
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 bg-white shadow rounded">
+      <h2 className="text-xl font-bold mb-4">إضافة منتج جديد</h2>
+
+      <label>الاسم:</label>
+      <input type="text" name="name" value={form.name} onChange={handleChange} required className="input" />
+
+      <label>الوصف:</label>
+      <textarea name="description" value={form.description} onChange={handleChange} required className="textarea" />
+
+      <label>السعر:</label>
+      <input type="number" name="price" value={form.price} onChange={handleChange} required className="input" />
+
+      <label>السعر بعد الخصم (اختياري):</label>
+      <input type="number" name="discount_price" value={form.discount_price} onChange={handleChange} className="input" />
+
+      <label>رابط الصورة الرئيسية:</label>
+      <input type="text" name="image_url" value={form.image_url} onChange={handleChange} required className="input" />
+
+      <label>الفئة:</label>
+      <input type="text" name="category" value={form.category} onChange={handleChange} required className="input" />
+
+      <label>الكلمات المفتاحية (مفصولة بفواصل):</label>
+      <input type="text" name="tags" value={form.tags} onChange={handleChange} className="input" />
+
+      <label>متوفر في المخزون:</label>
+      <input type="checkbox" name="in_stock" checked={form.in_stock} onChange={handleChange} />
+
+      <label>منتج مميز:</label>
+      <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} />
+
+      <label>الأكثر مبيعًا:</label>
+      <input type="checkbox" name="best_seller" checked={form.best_seller} onChange={handleChange} />
+
+      <label>الوزن:</label>
+      <input type="text" name="weight" value={form.weight} onChange={handleChange} className="input" />
+
+      <label>بلد المنشأ:</label>
+      <input type="text" name="origin" value={form.origin} onChange={handleChange} className="input" />
+
+      <label>المواصفات (بصيغة JSON):</label>
+      <textarea name="specifications" value={form.specifications} onChange={handleChange} className="textarea" placeholder='مثال: {"Flavor": "Sweet", "Color": "Amber"}' />
+
+      <button type="submit" className="btn btn-primary mt-4">إضافة المنتج</button>
+    </form>
+  );
+}
